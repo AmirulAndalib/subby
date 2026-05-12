@@ -175,9 +175,10 @@ class CommonIssuesFixer(BaseProcessor):
             def __add_missing_split(m: re.Match) -> str:
                 # Avoid adding a duplicate hyphen
                 # Avoid three-liners if second part has a line break
+                last = m[4].replace("\n", "")
                 if m[0].startswith('-'):
-                    return f'{m[1]}{m[2]}\n- {m[3]}{m[4].replace("\n", "")}'
-                return f'- {m[1]}{m[2]}\n- {m[3]}{m[4].replace("\n", "")}'
+                    return f'{m[1]}{m[2]}\n- {m[3]}{last}'
+                return f'- {m[1]}{m[2]}\n- {m[3]}{last}'
             line = re.sub(
                 r'(.*)([^\.\sA-Z][!\.;:?])(?<!(?:Mr|Ms)\.)(?<!Mrs\.)([A-Z][^.])(.*)',
                 __add_missing_split,
