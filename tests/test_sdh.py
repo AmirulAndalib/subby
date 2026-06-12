@@ -60,7 +60,12 @@ HERE. IN THIS OFFICE ARE A LOT
 00:03:00,000 --> 00:03:15,000
 - [Archie] Rae?
 - [chanting]
-Jabba. Jabba. Jabba.'''
+Jabba. Jabba. Jabba.
+
+14
+00:02:00,000 --> 00:02:15,000
+911 DISPATCHER [ON
+PHONE]: <i>The Belmar Bridge</i>'''
 
 
 def test_sdh_stripping():
@@ -77,6 +82,7 @@ def test_sdh_stripping():
     assert srt[6].content == '- Boo!\n- No, thanks.'
     assert srt[7].content == 'SO THIS IS MY HOME OFFICE\nHERE. IN THIS OFFICE ARE A LOT'
     assert srt[8].content == '- Rae?\n- Jabba. Jabba. Jabba.'
+    assert srt[9].content == '<i>The Belmar Bridge</i>'
 
 
 if __name__ == "__main__":
