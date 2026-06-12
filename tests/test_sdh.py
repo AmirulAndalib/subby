@@ -57,13 +57,13 @@ HERE. IN THIS OFFICE ARE A LOT
 >>
 
 13
-00:03:00,000 --> 00:03:15,000
+00:02:00,000 --> 00:02:15,000
 - [Archie] Rae?
 - [chanting]
 Jabba. Jabba. Jabba.
 
 14
-00:02:00,000 --> 00:02:15,000
+00:03:00,000 --> 00:03:15,000
 911 DISPATCHER [ON
 PHONE]: <i>The Belmar Bridge</i>'''
 
@@ -72,7 +72,7 @@ def test_sdh_stripping():
     stripper = SDHStripper()
     fixer = CommonIssuesFixer()  # Fixer is currently necessary to fix some of the issues from stripping
     srt, _ = fixer.from_srt(stripper.from_string(EXAMPLE_1)[0])
-    assert len(srt) == 9
+    assert len(srt) == 10
     assert srt[0].content == '<i>"W" who?</i>'
     assert srt[1].content == '- ♪ Hey, boo ♪\n- ♪ Hey, boo ♪'
     assert srt[2].content == "It's zoo time!"
