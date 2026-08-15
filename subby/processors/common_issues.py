@@ -69,7 +69,7 @@ class CommonIssuesFixer(BaseProcessor):
             )
             # Replace hashes, asterisks at the end of a line with a musical note
             line = re.sub(
-                r'(?<=\s)(?<![#\*])(?:[#\*]{1,3}|[#\*]{1,3})(?![0-9A-Z])(</i>$|$)',
+                r'(?<=\s)(?<![#\*])(?:[#\*]{1,3})(?![0-9A-Z])(</i>$|$)',
                 r'♪\1',
                 line,
                 flags=re.M
