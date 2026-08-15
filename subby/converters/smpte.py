@@ -175,8 +175,8 @@ class _SMPTEConverter:
         hours = int(parsed.group(1))
         minutes = int(parsed.group(2))
         seconds = int(parsed.group(3))
-        miliseconds = 0
+        milliseconds = 0
         if frames := parsed.group(4):
-            miliseconds = self.frame_duration * int(frames)
+            milliseconds = self.frame_duration * int(frames)
 
-        return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, miliseconds)
+        return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, milliseconds)

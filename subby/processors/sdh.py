@@ -37,7 +37,7 @@ class SDHStripper(BaseProcessor):
         """Removes full line descriptions"""
         for line in srt:
             text = self._strip_tags(line.content)
-            for regex in (Regex.FULL_LINE_DESCIRPTION_BRACKET, Regex.FULL_LINE_DESCIRPTION_PARENTHESES):
+            for regex in (Regex.FULL_LINE_DESCRIPTION_BRACKET, Regex.FULL_LINE_DESCRIPTION_PARENTHESES):
                 text = re.sub(regex, r'', text, flags=re.S).strip()
 
             if not text:

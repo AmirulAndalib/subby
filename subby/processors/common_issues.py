@@ -154,7 +154,7 @@ class CommonIssuesFixer(BaseProcessor):
             line = re.sub(r'(</[a-z]>)(\w)', r'\1 \2', line)
             line = re.sub(r'([a-z]),([a-zA-Z])', r'\1, \2', line)
             line = re.sub(r',\n([a-z]+[\.\?])\s*$', r', \1', line)
-            # Correct front and end elypses
+            # Correct front and end ellipses
             line = re.sub(
                 rf'({Regex.FRONT_OPTIONAL_TAGS_WITH_HYPHEN})' r'\.{1,}',
                 r'\1...',
@@ -303,5 +303,5 @@ class CommonIssuesFixer(BaseProcessor):
 
     @staticmethod
     def _subtract_ts(ts1: datetime.timedelta, ts2: datetime.timedelta) -> int:
-        """Subtracts two timestamps and returns a difference as int of miliseconds"""
+        """Subtracts two timestamps and returns a difference as int of milliseconds"""
         return round((ts1 - ts2).total_seconds() * 1000)

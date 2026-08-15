@@ -7,11 +7,11 @@ from srt import Subtitle
 
 
 def timestamp_from_ms(duration: float | int) -> str:
-    """Returns a formatted timestamp from miliseconds"""
-    seconds, miliseconds = divmod(float(duration), 1000)
+    """Returns a formatted timestamp from milliseconds"""
+    seconds, milliseconds = divmod(float(duration), 1000)
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
-    return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, miliseconds)
+    return "%02d:%02d:%02d.%03d" % (hours, minutes, seconds, milliseconds)
 
 
 def timestamp_from_seconds(duration: float | int) -> str:
@@ -20,13 +20,13 @@ def timestamp_from_seconds(duration: float | int) -> str:
 
 
 def ms_from_timestamp(timestamp: str) -> int:
-    """Returns miliseconds from a timestamp"""
+    """Returns milliseconds from a timestamp"""
     timestamp = re.sub(r'[;\.\,]', r':', timestamp.replace('T:', ''))
-    hours, minutes, seconds, miliseconds = map(int, timestamp.split(':'))
-    miliseconds += hours * 3600000
-    miliseconds += minutes * 60000
-    miliseconds += seconds * 1000
-    return miliseconds
+    hours, minutes, seconds, milliseconds = map(int, timestamp.split(':'))
+    milliseconds += hours * 3600000
+    milliseconds += minutes * 60000
+    milliseconds += seconds * 1000
+    return milliseconds
 
 
 def timedelta_from_timestamp(timestamp: str) -> datetime.timedelta:
@@ -35,7 +35,7 @@ def timedelta_from_timestamp(timestamp: str) -> datetime.timedelta:
 
 
 def timedelta_from_ms(duration: float | int) -> datetime.timedelta:
-    """Returns timedelta from miliseconds"""
+    """Returns timedelta from milliseconds"""
     return datetime.timedelta(seconds=duration / 1000)
 
 
