@@ -1,5 +1,4 @@
 import copy
-import datetime
 import html
 import re
 import unicodedata
@@ -297,11 +296,11 @@ class CommonIssuesFixer(BaseProcessor):
             if not offset and hours > 23:
                 offset = hours
             if offset:
-                line.start -= datetime.timedelta(hours=offset)
-                line.end -= datetime.timedelta(hours=offset)
+                line.start -= timedelta(hours=offset)
+                line.end -= timedelta(hours=offset)
         return srt
 
     @staticmethod
-    def _subtract_ts(ts1: datetime.timedelta, ts2: datetime.timedelta) -> int:
+    def _subtract_ts(ts1: timedelta, ts2: timedelta) -> int:
         """Subtracts two timestamps and returns a difference as int of milliseconds"""
         return round((ts1 - ts2).total_seconds() * 1000)

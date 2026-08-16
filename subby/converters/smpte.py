@@ -165,9 +165,9 @@ class _SMPTEConverter:
     def _convert_ticks(self, ticks):
         ticks = int(ticks[:-1])
         offset = 1.0 / self.tickrate
-        seconds = (offset * ticks) * 1000
+        milliseconds = (offset * ticks) * 1000
 
-        return timestamp_from_ms(seconds)
+        return timestamp_from_ms(milliseconds)
 
     def _parse_timestamp(self, timestamp):
         regex = r'([0-9]{2}):([0-9]{2}):([0-9]{2})[:\.,]?([0-9]{0,3})?'
