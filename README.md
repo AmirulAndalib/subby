@@ -71,7 +71,6 @@ file = Path('test.vtt')
 # All statements below are equivalent
 srt = converter.from_file(file)
 srt = converter.from_string(file.read_text())
-srt = converter.from_bytes(file.read_bytes())
 
 # srt is subby.SubRipFile
 
@@ -93,7 +92,6 @@ file = Path('test.vtt')
 # All statements below are equivalent
 srt, status = processor.from_file(file)
 srt, status = processor.from_string(file.read_text())
-srt, status = processor.from_bytes(file.read_bytes())
 
 # srt is subby.SubRipFile, status is bool
 
