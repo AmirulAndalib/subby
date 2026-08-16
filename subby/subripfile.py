@@ -13,12 +13,15 @@ class SubRipFile(UserList):
 
     @classmethod
     def from_string(cls, source: str):
+        """Loads a subtitle from string"""
         return cls(list(srt.parse(source, ignore_errors=True)))
 
     def clean_indexes(self):
+        """Sorts and reindexes lines"""
         self.data = list(srt.sort_and_reindex(self.data))
 
     def sort(self, *args, **kwargs):
+        """Sorts lines"""
         super().sort(*args, **kwargs)
 
         # Fix index after sorting, so that the sort doesn't get overwritten later
@@ -26,6 +29,7 @@ class SubRipFile(UserList):
             line.index = i
 
     def offset(self, offset: timedelta):
+        """Shift all lines forwards by a given offset"""
         for line in self.data:
             line.start += offset
             line.end += offset
@@ -35,7 +39,7 @@ class SubRipFile(UserList):
         return srt.compose(self.data, eol=eol)
 
     def save(self, path: Path, encoding: str = 'utf-8', eol: str | None = None):
-        """Exports subtitle as text"""
+        """Saves subtitle to a file"""
         with path.open(mode='wb') as fp:
             fp.write(srt.compose(self.data, eol=eol).encode(encoding))
 
