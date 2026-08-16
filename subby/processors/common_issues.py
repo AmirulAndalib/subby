@@ -147,7 +147,7 @@ class CommonIssuesFixer(BaseProcessor):
             line = re.sub(r'^-?\s*$', '', line, flags=re.M)
             line = re.sub(r'^(</?i>|\{\\an8\})?\s*$', '', line, flags=re.M)
             # Remove lines consisting only of a single character or digit
-            line = re.sub(r'^\[A-Za-z0-9]$', '', line)
+            line = re.sub(r'^\w$', '', line)
             # Adds missing spaces after "...", commas, and tags
             line = re.sub(r'([a-z])(\.\.\.)([a-zA-Z][^.])', r'\1\2 \3', line)
             line = re.sub(r'(</[a-z]>)(\w)', r'\1 \2', line)
