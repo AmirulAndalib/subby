@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections import deque
 
 from pymp4.parser import MP4
@@ -8,8 +9,6 @@ from subby.converters.smpte import SMPTEConverter
 from subby.converters.webvtt import WebVTTConverter
 from subby.subripfile import SubRipFile
 from subby.utils.time import timestamp_from_ms
-
-from abc import ABC, abstractmethod
 
 
 class BaseSegmentedConverter(BaseConverter, ABC):

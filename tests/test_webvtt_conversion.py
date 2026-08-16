@@ -1,7 +1,7 @@
 from datetime import timedelta
 from io import BytesIO
 
-from subby import CommonIssuesFixer, WebVTTConverter
+from subby import WebVTTConverter
 
 SPEAKER_TAG_TEST = b'''1
 00:00:01.000 --> 00:00:03.000

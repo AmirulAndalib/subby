@@ -1,8 +1,6 @@
-from datetime import timedelta
 from io import BytesIO
 
-from subby import WebVTTConverter
-from subby import SMPTEConverter
+from subby import SMPTEConverter, WebVTTConverter
 
 WEBVTT_SAMPLE = '''
 00:03:14.945 --> 00:03:16.238 line:95%,end

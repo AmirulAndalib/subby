@@ -1,4 +1,4 @@
-from subby import SDHStripper, CommonIssuesFixer
+from subby import CommonIssuesFixer, SDHStripper
 
 EXAMPLE_1 = '''1
 00:00:11,803 --> 00:00:13,346

@@ -1,7 +1,6 @@
-from datetime import time, timedelta
+from datetime import timedelta
 
 from subby import CommonIssuesFixer
-
 
 MUSICAL_NOTE_EXAMPLE = '''1
 00:01:00,000 --> 00:01:01,000
