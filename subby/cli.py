@@ -48,7 +48,7 @@ def version():
     "--encoding",
     type=str,
     default="utf-8",
-    help="Character encoding (default: utf-8)."
+    help="Output character encoding (default: utf-8)."
 )
 @click.option(
     "-n",
