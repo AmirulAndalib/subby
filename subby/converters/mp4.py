@@ -1,3 +1,4 @@
+import threading
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -10,6 +11,7 @@ from subby.converters.webvtt import WebVTTConverter
 from subby.subripfile import SubRipFile
 from subby.utils.time import timestamp_from_ms
 
+THREAD_LOCK = threading.Lock()
 
 class BaseSegmentedConverter(BaseConverter, ABC):
     """Segmented stream base converter"""
@@ -39,7 +41,8 @@ class BaseSegmentedConverter(BaseConverter, ABC):
         else:
             segments.append(data)
 
-        return self._parse(segments)
+        with THREAD_LOCK:
+            return self._parse(segments)
 
     @abstractmethod
     def _parse(self, segments) -> SubRipFile:
