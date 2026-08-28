@@ -13,10 +13,9 @@ from subby.subripfile import SubRipFile
 from subby.utils.time import timedelta_from_timestamp
 
 HTML_TAG = re.compile(r'</?(?!/?i)[^>\s]+>')
-STYLE_TAG = re.compile(r'<c(\.[^>]+)>([^<]+)<\/c>')
-STYLE_TAG_CLOSE = re.compile(r'<\/c>$')
+STYLE_TAG = re.compile(r'<c(\.[^>]+)>([^<]+)<\/c(?:\1)?>')
 SKIP_WORDS = ('WEBVTT', 'NOTE', '/*', 'X-TIMESTAMP-MAP')
-SPEAKER_TAG = re.compile(r'<v\s+[^>]+>')  # Matches opening <v Name> tags, closing tags handled by STYLE_TAG_CLOSE
+SPEAKER_TAG = re.compile(r'<v\s+[^>]+>')  # Matches opening <v Name> tags, closing tags handled by HTML_TAG
 RUBY_TEXT_TAG = re.compile(r'<rt>([^<]+)<\/rt>')
 RUBY_PARENTHESIS_TAG = re.compile(r'<rp>([^<]+)<\/rp>')
 

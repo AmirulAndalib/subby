@@ -68,6 +68,20 @@ E per via del francese?
 '''
 
 
+CSS_ITALICS_ANNOTATED_CLOSE_TEST = b'''
+STYLE
+::cue(.magenta) {
+  font-style: italic;
+}
+
+00:00:07.208 --> 00:00:09.480
+<c.magenta>Musique douce</c.magenta>
+
+00:00:17.208 --> 00:00:19.480
+<c.magenta>Musique douce</c>
+'''
+
+
 def test_speaker_tag_stripping():
     converter = WebVTTConverter()
     stream = BytesIO(SPEAKER_TAG_TEST)
@@ -128,9 +142,19 @@ def test_parsing_misconverted_srt_lines():
     assert srt[2].content == 'E per via del francese?'
 
 
+def test_css_italics_with_annotated_close_tag():
+    converter = WebVTTConverter()
+    stream = BytesIO(CSS_ITALICS_ANNOTATED_CLOSE_TEST)
+    srt = converter.parse(stream)
+
+    assert srt[0].content == '<i>Musique douce</i>'
+    assert srt[1].content == '<i>Musique douce</i>'
+
+
 if __name__ == "__main__":
     test_speaker_tag_stripping()
     test_nested_italics_tag()
     test_sorting_same_times_by_position()
     test_parsing_unseparated_lines()
     test_parsing_misconverted_srt_lines()
+    test_css_italics_with_annotated_close_tag()
