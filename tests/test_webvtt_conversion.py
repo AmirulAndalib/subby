@@ -82,6 +82,60 @@ STYLE
 '''
 
 
+UNCLOSED_TAGS_TEST = b'''
+00:00:07.208 --> 00:00:09.480
+<i>Test
+
+00:00:17.208 --> 00:00:19.480
+Test</i>
+'''
+
+
+RUBY_TEST = b'''
+00:00:07.208 --> 00:00:09.480
+<ruby>Test<rt>ruby</rt></ruby>
+
+00:00:17.208 --> 00:00:19.480
+<ruby>Test<rt>ruby</ruby> text
+
+00:00:27.208 --> 00:00:29.480
+Test<rt>ruby</rt>
+'''
+
+
+STYLE_TEST = b'''
+00:00:07.208 --> 00:00:09.480
+I love reading STYLE magazine.
+
+STYLE
+::cue(.italique) { font-style: italic; }
+
+00:00:17.208 --> 00:00:19.480
+<c.italique>Italicized text</c>
+
+00:00:27.208 --> 00:00:29.480
+<c.italique>Italicized text</c.italique>
+'''
+
+
+COMPOUND_CLASS_STYLE_TEST = b'''
+STYLE
+::cue(.bold.italics) { font-style: italic; }
+
+00:00:17.208 --> 00:00:19.480
+<c.bold>Regular text</c>
+
+00:00:27.208 --> 00:00:29.480
+<c.bold.italics>Italicized text</c>
+'''
+
+INLINE_ARROW_TEST = b'''
+00:00:01.000 --> 00:00:05.000
+- Value change: yes --> no.
+- Confirmed.
+'''
+
+
 def test_speaker_tag_stripping():
     converter = WebVTTConverter()
     stream = BytesIO(SPEAKER_TAG_TEST)
@@ -151,6 +205,52 @@ def test_css_italics_with_annotated_close_tag():
     assert srt[1].content == '<i>Musique douce</i>'
 
 
+def test_unclosed_tags():
+    converter = WebVTTConverter()
+    stream = BytesIO(UNCLOSED_TAGS_TEST)
+    srt = converter.parse(stream)
+
+    assert srt[0].content == '<i>Test</i>'
+    assert srt[1].content == 'Test'
+
+
+def test_ruby():
+    converter = WebVTTConverter()
+    stream = BytesIO(RUBY_TEST)
+    srt = converter.parse(stream)
+
+    assert srt[0].content == 'Test(ruby)'
+    assert srt[1].content == 'Test(ruby) text'
+    assert srt[2].content == 'Test(ruby)'
+
+
+def test_style():
+    converter = WebVTTConverter()
+    stream = BytesIO(STYLE_TEST)
+    srt = converter.parse(stream)
+
+    assert srt[0].content == 'I love reading STYLE magazine.'
+    assert srt[1].content == '<i>Italicized text</i>'
+    assert srt[2].content == '<i>Italicized text</i>'
+
+
+def test_compound_class_style():
+    converter = WebVTTConverter()
+    stream = BytesIO(COMPOUND_CLASS_STYLE_TEST)
+    srt = converter.parse(stream)
+
+    assert srt[0].content == 'Regular text'
+    assert srt[1].content == '<i>Italicized text</i>'
+
+
+def test_inline_arrow():
+    converter = WebVTTConverter()
+    stream = BytesIO(INLINE_ARROW_TEST)
+    srt = converter.parse(stream)
+
+    assert srt[0].content == '- Value change: yes --> no.\n- Confirmed.'
+
+
 if __name__ == "__main__":
     test_speaker_tag_stripping()
     test_nested_italics_tag()
@@ -158,3 +258,8 @@ if __name__ == "__main__":
     test_parsing_unseparated_lines()
     test_parsing_misconverted_srt_lines()
     test_css_italics_with_annotated_close_tag()
+    test_unclosed_tags()
+    test_ruby()
+    test_style()
+    test_compound_class_style()
+    test_inline_arrow()

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import html
 import re
-from functools import partial
 from operator import attrgetter
 
 import tinycss
@@ -12,12 +11,12 @@ from subby.converters.base import BaseConverter
 from subby.subripfile import SubRipFile
 from subby.utils.time import timedelta_from_timestamp
 
-HTML_TAG = re.compile(r'</?(?!/?i)[^>\s]+>')
-STYLE_TAG = re.compile(r'<c(\.[^>]+)>([^<]+)<\/c(?:\1)?>')
-SKIP_WORDS = ('WEBVTT', 'NOTE', '/*', 'X-TIMESTAMP-MAP')
-SPEAKER_TAG = re.compile(r'<v\s+[^>]+>')  # Matches opening <v Name> tags, closing tags handled by HTML_TAG
-RUBY_TEXT_TAG = re.compile(r'<rt>([^<]+)<\/rt>')
-RUBY_PARENTHESIS_TAG = re.compile(r'<rp>([^<]+)<\/rp>')
+CUE_TAG = re.compile(r'<(/?)([^\s/>]+)([^>]*)>')
+TIME_RE = re.compile(r'\d --> \d',)
+SKIP_RE = re.compile(r'^(?:WEBVTT|NOTE|/\*|REGION|X-TIMESTAMP-MAP)')
+KNOWN_TAGS = ('b', 'c', 'i', 'lang', 'rp', 'rt', 'ruby', 'u', 'v')
+
+STYLE_TYPE = dict[frozenset[str], dict[str, str]]
 
 
 class WebVTTConverter(BaseConverter):
@@ -27,11 +26,10 @@ class WebVTTConverter(BaseConverter):
         srt = SubRipFile()
         looking_for_text = False
         looking_for_style = False
-        text = []
-        position = None
+        text: list[str] = []
         line_number = 1
-        styles = {}
-        current_style = []
+        styles: STYLE_TYPE = {}
+        current_style: list[str] = []
 
         css_parser = tinycss.make_parser('page3')
 
@@ -40,7 +38,7 @@ class WebVTTConverter(BaseConverter):
             line = line.decode('utf-8').replace('\r\n', '\n').replace('\r', '\n').strip()
 
             # Skip processing any unnecessary lines
-            if any(line.startswith(word) for word in SKIP_WORDS):
+            if SKIP_RE.match(line):
                 continue
 
             # Empty line separates cues
@@ -48,16 +46,19 @@ class WebVTTConverter(BaseConverter):
                 # Parse current style
                 if looking_for_style:
                     stylesheet = css_parser.parse_stylesheet('\n'.join(current_style))
+                    current_style.clear()
                     for rule in stylesheet.rules:
                         ft = next((e for e in rule.selector if e.type == 'FUNCTION'), None)
                         if not ft:
                             continue
-                        name = next((t for t in ft.content if t.type == 'IDENT'), None)
-                        if not name:
+                        # Key by all style names to handle compound selectors
+                        # https://github.com/pbs/pycaption/commit/77ba1b0
+                        key = frozenset(t.value for t in ft.content if t.type == 'IDENT')
+                        if not key:
                             continue
-                        styles[name.value] = {}
+                        styles[key] = {}
                         for dec in rule.declarations:
-                            styles[name.value][dec.name] = dec.value.as_css()
+                            styles[key][dec.name] = dec.value.as_css()
 
                     looking_for_style = False
 
@@ -71,7 +72,7 @@ class WebVTTConverter(BaseConverter):
                 looking_for_text = False
 
             # Check for style start
-            elif 'STYLE' in line:
+            elif line == 'STYLE':
                 looking_for_style = True
 
             # Check for style content
@@ -79,7 +80,7 @@ class WebVTTConverter(BaseConverter):
                 current_style.append(line)
 
             # Check for time line
-            elif ' --> ' in line:
+            elif TIME_RE.search(line):
                 # Time line should always cause a line split, even without a separating new line
                 if looking_for_text and text and srt:
                     srt[-1].content = '\n'.join(text)
@@ -109,7 +110,8 @@ class WebVTTConverter(BaseConverter):
                     start=timedelta_from_timestamp(start.strip('.')),
                     end=timedelta_from_timestamp(end.strip('.')),
                     content=inline_text,
-                    proprietary=position or 100  # misuse this field to temporarily hold pos  # pyright: ignore[reportArgumentType]
+                    # misuse this field to temporarily hold position
+                    proprietary=position if position is not None else 100  # pyright: ignore[reportArgumentType]
                 ))
 
                 looking_for_text = True
@@ -117,18 +119,6 @@ class WebVTTConverter(BaseConverter):
 
             # Append text if we're inside a line
             elif looking_for_text:
-                # Unescape html entities
-                line = html.unescape(line)
-
-                # Remove speaker tags here
-                line = re.sub(SPEAKER_TAG, '', line)
-
-                # Set \an8 tag if position is below 25
-                # (value taken from SubtitleEdit)
-                if position is not None and position < 25:
-                    line = '{\\an8}' + line
-                    position = None
-
                 text.append(line.strip())
 
         # Add any leftover text to the last line
@@ -140,22 +130,20 @@ class WebVTTConverter(BaseConverter):
         srt.sort(key=attrgetter('start', 'end', 'proprietary'))
 
         for line in srt:
+            # Convert VTT tags to SRT
+            if '<' in line.content:
+                line.content = self._convert_cue_tags(line.content, styles)
+
+            # Unescape HTML entities
+            line.content = html.unescape(line.content)
+
+            # Set \an8 tag if position is below 25
+            # (value taken from Subtitle Edit)
+            position = line.proprietary
+            if position is not None and position < 25:
+                line.content = '{\\an8}' + line.content
+
             line.proprietary = ''  # remove misused field
-
-            # Replace styles with italics tag when appropriate
-            # (replace instead of match, to handle nested)
-            line.content = re.sub(
-                STYLE_TAG,
-                partial(self._replace_italics, styles=styles),
-                line.content
-            )
-
-            # Add parentheses around ruby text
-            line.content = re.sub(RUBY_TEXT_TAG, r'(\1)', line.content)
-            line.content = re.sub(RUBY_PARENTHESIS_TAG, r'', line.content)
-
-            # Strip non-italic tags
-            line.content = re.sub(HTML_TAG, '', line.content)
 
         return srt
 
@@ -181,10 +169,75 @@ class WebVTTConverter(BaseConverter):
 
         return position
 
+    def _convert_cue_tags(self, content: str, styles: STYLE_TYPE) -> str:
+        """
+        Converts WebVTT cue text tags to SRT
+
+        An end tag only closes the current node when its tag name matches,
+        </ruby> auto-closes an unclosed <rt>, unmatched end tags are ignored,
+        and tags left open close at the end of the cue.
+        """
+        out = []
+
+        T = tuple[str, bool, list[str]]
+        stack: list[T] = []
+
+        def emit(text: str):
+            if stack:
+                stack[-1][2].append(text)
+                return
+            return out.append(text)
+
+        def flush(span: T) -> str:
+            name, italic, buffer = span
+            text = ''.join(buffer)
+            if name == 'rt':
+                text = f'({text})'
+            elif name == 'rp':
+                text = ''
+            if italic and text.strip():
+                text = f'<i>{text}</i>'
+            return text
+
+        cursor = 0
+        for tag in CUE_TAG.finditer(content):
+            emit(content[cursor:tag.start()])
+            cursor = tag.end()
+
+            closing, name = tag[1], tag[2]
+
+            if closing:
+                # Closing tags may repeat the class name (</c.magenta>)
+                base = name.split('.', 1)[0]
+
+                if stack and stack[-1][0] == base:
+                    emit(flush(stack.pop()))
+                # </ruby> auto-closes an unclosed <rt>
+                elif base == 'ruby' and len(stack) > 1 \
+                        and stack[-1][0] == 'rt' and stack[-2][0] == 'ruby':
+                    emit(flush(stack.pop()))
+                    emit(flush(stack.pop()))
+            else:
+                base, _, classes = name.partition('.')
+                if base not in KNOWN_TAGS:
+                    continue
+
+                italic = base == 'i' or self._is_italic(set(classes.split('.')), styles)
+                stack.append((base, italic, []))
+
+        emit(content[cursor:])
+
+        # Close any leftover tags
+        while stack:
+            emit(flush(stack.pop()))
+
+        return ''.join(out)
+
     @staticmethod
-    def _replace_italics(match: re.Match, styles: dict[str, dict[str, str]]) -> str:
-        for sn in match[1].split('.'):
-            if ((s := styles.get(sn)) and s.get('font-style') == 'italic') \
-                    or sn == 'font-style_italic':  # out of spec hack
-                return f'<i>{match[2]}</i>'
-        return match[0]
+    def _is_italic(classes: set[str], styles: STYLE_TYPE) -> bool:
+        """Determines if any of the specified classes should be italicized"""
+        # "font-style_italic" class name is an out of specs hack
+        return 'font-style_italic' in classes or any(
+            rules.issubset(classes) and values.get('font-style') == 'italic'
+            for rules, values in styles.items()
+        )
