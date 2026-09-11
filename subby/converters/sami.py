@@ -22,22 +22,17 @@ class _SAMIConverter(HTMLParser):
         self.tags = []
 
         self.srt = SubRipFile([])
-        self.line_list = []
 
         self.feed(self._correct_tags(subtitle))
         self._convert()
 
-    def handle_starttag(self, tag, attrs_org):
-        attrs = {}
-        for attr, val in attrs_org:
-            attrs[attr] = val
-
+    def handle_starttag(self, tag, attrs):
         if tag == 'sync':
             data = {'text': ''}
             data.update(attrs)
             self.lines.append(data)
 
-        self.tags.append({'name': tag, 'attrs': attrs})
+        self.tags.append({'name': tag})
 
     def handle_data(self, data):
         last_tag = self.tags[-1]['name']
@@ -57,26 +52,19 @@ class _SAMIConverter(HTMLParser):
             # Use empty lines as the end of previous line
             if not line.get('text', '').strip():
                 end_time = float(line['start'])
-                self.line_list[-1]['end'] = end_time
+                if self.srt:
+                    self.srt[-1].end = timedelta_from_ms(end_time)
                 continue
 
             if not line.get('end'):
                 # Arbitrarily set duration to 4s if end time not present
                 line['end'] = float(line['start']) + 4000
 
-            srt_line = {
-                'start': float(line['start']),
-                'end': float(line['end']),
-                'content': line['text'].strip()
-            }
-            self.line_list.append(srt_line)
-
-        for num, line in enumerate(self.line_list):
             srt_line = Subtitle(
                 index=num,
-                start=timedelta_from_ms(line['start']),
-                end=timedelta_from_ms(line['end']),
-                content=line['content']
+                start=timedelta_from_ms(float(line['start'])),
+                end=timedelta_from_ms(float(line['end'])),
+                content=line['text'].strip()
             )
             self.srt.append(srt_line)
 
