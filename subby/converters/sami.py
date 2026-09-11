@@ -35,6 +35,10 @@ class _SAMIConverter(HTMLParser):
         self.tags.append({'name': tag})
 
     def handle_data(self, data):
+        # Skip data prepended before the document
+        if not self.tags:
+            return
+
         last_tag = self.tags[-1]['name']
         if last_tag == 'br':
             self.lines[-1]['text'] += '\n'
@@ -55,6 +59,9 @@ class _SAMIConverter(HTMLParser):
                 if self.srt:
                     self.srt[-1].end = timedelta_from_ms(end_time)
                 continue
+
+            if not line.get('start'):
+                line['start'] = 0
 
             if not line.get('end'):
                 # Arbitrarily set duration to 4s if end time not present
